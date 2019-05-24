@@ -138,13 +138,13 @@ def hammingDistance(byteText1,byteText2):
 
 def xorRepeatingKeyBruteForce(byteCipher):
     '''
-    This function brute forces a repeating-key XOR encryption
+    This function brute forces a repeating-key XOR encryption statistically.
     '''
     # First calculate the most likely key size by comparing sections of the cipher
     # to determine their hamming distance and normalise the result.
     keySizes = {0:1000.0}
     sectionsToCompare = 3 # increasing this exponentially increases the complexity and time required
-    for keySize in range(1,len(byteCipher)//sectionsToCompare):
+    for keySize in range(1,min(len(byteCipher)//sectionsToCompare,30)):
         sections = []
         if sectionsToCompare > len(byteCipher)//keySize:
             sectionsToCompare = len(byteCipher)//keySize
@@ -168,21 +168,23 @@ def xorRepeatingKeyBruteForce(byteCipher):
         if keySizes[keySize] in bestNormalisedAverageHammingDistances:
             bestKeySizes.append(keySize)
     # Go through each key size
-    bestKeys = set()
+    bestDecryptions = []
+    print(bestKeySizes)
     for keySize in bestKeySizes:
-        for startIndex in range(keySize-1): # Go through each possible start position for the key
-            # Calculate the ending index (cut of the end of the cipher because of characters that don't make a full keySize-sized block
-            endIndex = len(byteCipher)-((len(byteCipher)-startIndex)%keySize)
-            # Go through each block between the indexes
-            byteKey = b''
-            for blockNum in range((endIndex-startIndex)//keySize):
-                block = byteCipher[startIndex+keySize*blockNum:startIndex+keySize*(blockNum+1)]
-                bestEnglishScore,bestKey,bestByteText = xorSingleCharBruteForce(block)
-                byteKey += convertToBytes(bestKey,'int')
-            bestKeys.add(byteKey) 
-    for byteKey in bestKeys:
-        print(byteKey,"\t",xorRepeatingKey(byteCipher,byteKey))
-    return bestKeys
+        print(keySize)
+        byteKey = b''
+        # Break the ciphertext into blocks that are 'keySize' in length
+        for i in range(keySize):
+            block = b''
+            # Transpose the blocks - make a block that is the ith byte of every block
+            for j in range(i,len(byteCipher),keySize):
+                block += convertToBytes(byteCipher[j],'int')
+            # Solve each block as if it was single-character XOR
+            byteKey += convertToBytes(xorSingleCharBruteForce(block)[1],'int')
+        # Record the plaintext of the key and the key
+        bestDecryptions.append((byteKey,xorRepeatingKey(byteCipher,byteKey)))
+    # Get the decryption with the highest english score
+    return max(bestDecryptions, key=lambda k: getEnglishScore(k[1]))
 
 # CRYPTOPALS
 # S1C1
@@ -220,12 +222,11 @@ assert(xorRepeatingKey(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a2
 
 #S1C6
 print("S1C6 - Break repeating-key XOR")
-file = open("S1C6.txt","r").readlines()
+file = open("S1C6.txt","r").read()
 
 assert(byteToBits(5) == b"00000101")
 assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
-for line in file:
-    line = convertToBytes(line,'b64')
-    xorRepeatingKeyBruteForce(line)
+byteCipher = convertToBytes(file,'b64')
+print(xorRepeatingKeyBruteForce(byteCipher)[0].decode().rstrip())
 
 

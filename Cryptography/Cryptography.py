@@ -177,16 +177,19 @@ def xorRepeatingKeyBruteForce(byteCipher):
             # Calculate the ending index (cut of the end of the cipher because of characters that don't make a full keySize-sized block
             endIndex = len(byteCipher)-((len(byteCipher)-startIndex)%keySize)
             # Go through each block between the indexes
-            key = b''
+            byteKey = b''
             for blockNum in range((endIndex-startIndex)//keySize):
                 block = byteCipher[startIndex+keySize*blockNum:startIndex+keySize*(blockNum+1)]
                 bestEnglishScore,bestKey,bestByteText = xorSingleCharBruteForce(block)
-                print(bestEnglishScore,bestKey,bestByteText)
+                byteKey += convertToBytes(bestKey,'int')
+                #print(bestEnglishScore,bestKey,bestByteText)
 #                for byte in block:
 #                    bestEnglishScore,bestKey,bestByteText = xorSingleCharBruteForce(byte)
 #                    key += bestKey
 #                    print(bestEnglishScore,bestKey,bestByteText)
-            print(key)
+            print(byteKey)
+            print(xorRepeatingKey(byteCipher,byteKey))
+            print()
             
 
     return ''

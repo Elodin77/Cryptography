@@ -143,7 +143,7 @@ def xorRepeatingKeyBruteForce(byteCipher):
     # First calculate the most likely key size by comparing sections of the cipher
     # to determine their hamming distance and normalise the result.
     keySizes = {0:1000.0}
-    sectionsToCompare = 2 # increasing this exponentially increases the complexity and time required
+    sectionsToCompare = 3 # increasing this exponentially increases the complexity and time required
     for keySize in range(1,len(byteCipher)//sectionsToCompare):
         sections = []
         if sectionsToCompare > len(byteCipher)//keySize:
@@ -161,14 +161,14 @@ def xorRepeatingKeyBruteForce(byteCipher):
         # Add this value to the dictionary
         keySizes[keySize] =  float(normalisedAverageHammingDistance)
     # Get the top 'x' key sizes
-    numOfKeySizesToTry = 3 # The top 'numOfKeySizesToTry' key sizes will be stored and tried next
+    numOfKeySizesToTry = 5 # The top 'numOfKeySizesToTry' key sizes will be stored and tried next
     bestNormalisedAverageHammingDistances = sorted(keySizes.values())[:numOfKeySizesToTry]
     bestKeySizes = []
     for keySize in keySizes.keys():
         if keySizes[keySize] in bestNormalisedAverageHammingDistances:
             bestKeySizes.append(keySize)
     # Go through each key size
-    bestKeys = {}
+    bestKeys = set()
     for keySize in bestKeySizes:
         for startIndex in range(keySize-1): # Go through each possible start position for the key
             # Calculate the ending index (cut of the end of the cipher because of characters that don't make a full keySize-sized block
@@ -179,17 +179,10 @@ def xorRepeatingKeyBruteForce(byteCipher):
                 block = byteCipher[startIndex+keySize*blockNum:startIndex+keySize*(blockNum+1)]
                 bestEnglishScore,bestKey,bestByteText = xorSingleCharBruteForce(block)
                 byteKey += convertToBytes(bestKey,'int')
-                #print(bestEnglishScore,bestKey,bestByteText)
-#                for byte in block:
-#                    bestEnglishScore,bestKey,bestByteText = xorSingleCharBruteForce(byte)
-#                    key += bestKey
-#                    print(bestEnglishScore,bestKey,bestByteText)
-            print(byteKey)
-            print(xorRepeatingKey(byteCipher,byteKey))
-            print()
-            
-
-    return ''
+            bestKeys.add(byteKey)
+    for byteKey in bestKeys:
+        print(byteKey,"\t",xorRepeatingKey(byteCipher,byteKey))
+    return bestKeys
 
 # CRYPTOPALS
 # S1C1
@@ -233,6 +226,6 @@ assert(byteToBits(5) == b"00000101")
 assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
 for line in file:
     line = convertToBytes(line,'b64')
-    xorRepeatingKeyBruteForce(byteCipher)
+    xorRepeatingKeyBruteForce(line)
 
 

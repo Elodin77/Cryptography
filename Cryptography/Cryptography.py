@@ -85,14 +85,16 @@ def xorRepeatingString(byteText,byteKey):
         index += 1
     return encryptedText
 
+def convertToByte(value):
+    return ''
+
 def byteToBits(byte):
     '''
     This function converts a byte to a list of bits.
     '''
-    bits = []
+    bits = b''
     for i in [1,2,4,8,16,32,64,128]:
-        bits.append(byte&i)
-    bits = bits[::-1]
+        bits += bytes(str(int(byte&i != 0)),'utf-8')
     return bits
 
 def calculateHammingDistance(byteText1,byteText2):
@@ -109,7 +111,7 @@ def calculateHammingDistance(byteText1,byteText2):
     return hammingDistance
 
 def xorRepeatingStringBruteForce(byteCipher):
-
+    return ''
 
 # CRYPTOPALS
 # S1C1
@@ -126,7 +128,7 @@ bestKey = ''
 bestByteText = b''
 for line in file:
     bytesLine = bytes.fromhex(line.strip())
-    score,key,byteText = singleCharXorBruteForce(bytesLine)
+    score,key,byteText = xorSingleCharBruteForce(bytesLine)
     if score > bestEnglishScore:
         bestEnglishScore = int(score)
         bestKey = int(key)
@@ -138,5 +140,5 @@ bytesText = bytes(file,'utf-8')
 assert(xorRepeatingString(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
 #S1C6
 file = open("S1C6.txt","r").read()
-print(byteToBits(100))
+assert(byteToBits(5) == b'00000101')
 

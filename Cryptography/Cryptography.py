@@ -77,11 +77,10 @@ def xorRepeatingKey(byteText,byteKey):
     This encrypts a message using a repeating key XOR encryption.
     The plaintext and key are both strings.
     '''
-    
     index = 0
     encryptedText = b''
     for char in byteText:
-        encryptedText += convertToBytes(char ^ byteKey[index%3],'int')
+        encryptedText += convertToBytes(char ^ byteKey[index%len(byteKey)],'int')
         index += 1
     return encryptedText
 
@@ -164,12 +163,10 @@ def xorRepeatingKeyBruteForce(byteCipher):
     # Get the top 'x' key sizes
     numOfKeySizesToTry = 3 # The top 'numOfKeySizesToTry' key sizes will be stored and tried next
     bestNormalisedAverageHammingDistances = sorted(keySizes.values())[:numOfKeySizesToTry]
-    print(sorted(keySizes.values())[:numOfKeySizesToTry])
     bestKeySizes = []
     for keySize in keySizes.keys():
         if keySizes[keySize] in bestNormalisedAverageHammingDistances:
             bestKeySizes.append(keySize)
-    print(bestKeySizes)
     # Go through each key size
     bestKeys = {}
     for keySize in bestKeySizes:

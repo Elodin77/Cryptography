@@ -209,6 +209,7 @@ file = open("S1C4.txt","r").readlines()
 bestEnglishScore = 0
 bestKey = ''
 bestByteText = b''
+#[todo] show progress through file
 for line in file:
     bytesLine = convertToBytes(line.strip(),'hex')
     score,key,byteText = xorSingleCharBruteForce(bytesLine)
@@ -226,6 +227,7 @@ bytesText = convertToBytes(file,'str')
 assert(xorRepeatingKey(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
 
 #S1C6
+'''
 print("S1C6 - Break repeating-key XOR")
 file = open("S1C6.txt","r").read()
 
@@ -233,5 +235,6 @@ assert(byteToBits(5) == b"00000101")
 assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
 byteCipher = convertToBytes(file,'b64')
 print(xorRepeatingKeyBruteForce(byteCipher,showProgress=True)[0].decode().rstrip())
+'''
 
 

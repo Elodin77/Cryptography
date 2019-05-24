@@ -179,7 +179,7 @@ def xorRepeatingKeyBruteForce(byteCipher):
                 block = byteCipher[startIndex+keySize*blockNum:startIndex+keySize*(blockNum+1)]
                 bestEnglishScore,bestKey,bestByteText = xorSingleCharBruteForce(block)
                 byteKey += convertToBytes(bestKey,'int')
-            bestKeys.add(byteKey)
+            bestKeys.add(byteKey) 
     for byteKey in bestKeys:
         print(byteKey,"\t",xorRepeatingKey(byteCipher,byteKey))
     return bestKeys

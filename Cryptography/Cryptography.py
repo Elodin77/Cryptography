@@ -13,6 +13,12 @@ englishCharacterFrequencies = {
     'v': 0.0082903, 'w': 0.0171272, 'x': 0.0013692, 'y': 0.0145984, 'z': 0.0007836, ' ': 0.1918182
 }
 
+def bytesToString(inputBytes):
+    string = ''
+    for byte in inputBytes:
+        string += chr(byte)
+    return string
+
 def getEnglishScore(inputBytes):
     '''
     Returns a score which is the sum of the probabilities in how each letter of the input data
@@ -37,17 +43,16 @@ def xorHex(hex1,hex2):
     '''
     return hex(int(hex1,16)^int(hex2,16))[2:]
 
-def xorSingleChar(inputBytes, keyValue):
+def xorSingleChar(byteText, keyValue):
     '''
     XORs every byte of the input with the given keyValue
     '''
-
     output = b''
-    for char in inputBytes:
+    for char in byteText:
         output += bytes([char ^ keyValue])
     return output
 
-def singleCharXorBruteForce(ciphertext):
+def singleCharXorBruteForce(cipherBytes):
     '''
     Tries every possible byte for the single-char key. Decrypts the ciphertext with that
     byte and computes the english score for each plaintext. The plaintext with the highest
@@ -56,29 +61,51 @@ def singleCharXorBruteForce(ciphertext):
     englishScores = {}
     bestKey = ''
     bestEnglishScore = 0
-    bestPlainText = ''
+    bestByteText = b''
     for candidate in range(256):
-        plainText = xorSingleChar(ciphertext,candidate)
-        englishScores[candidate] = getEnglishScore(plainText)
+        byteText = xorSingleChar(cipherBytes,candidate)
+        englishScores[candidate] = getEnglishScore(byteText)
         if englishScores[candidate] > bestEnglishScore:
             bestKey = int(candidate)
             bestEnglishScore = englishScores[bestKey]
-            bestPlainText = ''.join(map(chr,plainText))
+            bestByteText = byteText
     # returns the english score, best key, and the plain text
-    return bestEnglishScore,bestKey,bestPlainText
+    return bestEnglishScore,bestKey,bestByteText
 
+def xorRepeatingString(byteText,byteKey):
+    '''
+    This encrypts a message using a repeating key XOR encryption.
+    The plaintext and key are both strings.
+    '''
+    
+    index = 0
+    encryptedText = b''
+    for char in byteText:
+        encryptedText += bytes(chr(char ^ byteKey[index%3]),'utf-8')
+        index += 1
+    return encryptedText
 
-
+# CRYPTOPALS
+# S1C1
 assert(hexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")=="SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
-
+# S1C2
 assert(xorHex("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965")=="746865206b696420646f6e277420706c6179")
-
+# S1C3
 ciphertextBytes = bytes.fromhex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
 assert(xorSingleChar(ciphertextBytes, singleCharXorBruteForce(ciphertextBytes)[1]) == b"Cooking MC's like a pound of bacon")
-
-
+# S1C4
 file = open("ciphertextFile.txt","r").readlines()
+bestEnglishScore = 0
+bestKey = ''
+bestByteText = b''
 for line in file:
-    line = line.strip()
-    score,key,plain = singleCharXorBruteForce(bytes(line,'utf-8'))
-    print(score,key,plain)
+    bytesLine = bytes.fromhex(line.strip())
+    score,key,byteText = singleCharXorBruteForce(bytesLine)
+    if score > bestEnglishScore:
+        bestEnglishScore = int(score)
+        bestKey = int(key)
+        bestByteText = byteText
+assert(bestByteText == b"Now that the party is jumping\n")
+# S1C5
+encryptedText = xorRepeatingString(b"secretmessage",b"secretkey")
+assert(xorRepeatingString(encryptedText,b"secretkey") == b"secretmessage")

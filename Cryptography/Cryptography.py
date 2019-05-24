@@ -136,14 +136,16 @@ def hammingDistance(byteText1,byteText2):
                 hammingDistance += 1
     return hammingDistance
 
-def xorRepeatingKeyBruteForce(byteCipher):
+def xorRepeatingKeyBruteForce(byteCipher,showProgress=False):
     '''
     This function brute forces a repeating-key XOR encryption statistically.
+    My version of this is special, in that it is very dynamic and accurate at determining exactly
+    the correct possible key sizes.
     '''
     # First calculate the most likely key size by comparing sections of the cipher
     # to determine their hamming distance and normalise the result.
     keySizes = {0:1000.0}
-    sectionsToCompare = 3 # increasing this exponentially increases the complexity and time required
+    sectionsToCompare = 3 # careful not to make this too high
     for keySize in range(1,min(len(byteCipher)//sectionsToCompare,30)):
         sections = []
         if sectionsToCompare > len(byteCipher)//keySize:
@@ -169,12 +171,15 @@ def xorRepeatingKeyBruteForce(byteCipher):
             bestKeySizes.append(keySize)
     # Go through each key size
     bestDecryptions = []
-    print(bestKeySizes)
+    # FIND OUT WHAT THE REST OF THIS FUNCTION DOES [todo]
+    keysDone = -1
     for keySize in bestKeySizes:
-        print(keySize)
+        keysDone += 1
         byteKey = b''
         # Break the ciphertext into blocks that are 'keySize' in length
         for i in range(keySize):
+            if showProgress:
+                print(str(round(i*100/keySize/numOfKeySizesToTry+keysDone*100/numOfKeySizesToTry,2))+"% CRACKED")
             block = b''
             # Transpose the blocks - make a block that is the ith byte of every block
             for j in range(i,len(byteCipher),keySize):
@@ -184,7 +189,7 @@ def xorRepeatingKeyBruteForce(byteCipher):
         # Record the plaintext of the key and the key
         bestDecryptions.append((byteKey,xorRepeatingKey(byteCipher,byteKey)))
     # Get the decryption with the highest english score
-    return max(bestDecryptions, key=lambda k: getEnglishScore(k[1]))
+    return max(bestDecryptions, key=lambda k: getEnglishScore(k[1])) # <-- Pretty cool syntax, I want to learn how to do it.
 
 # CRYPTOPALS
 # S1C1
@@ -227,6 +232,6 @@ file = open("S1C6.txt","r").read()
 assert(byteToBits(5) == b"00000101")
 assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
 byteCipher = convertToBytes(file,'b64')
-print(xorRepeatingKeyBruteForce(byteCipher)[0].decode().rstrip())
+print(xorRepeatingKeyBruteForce(byteCipher,showProgress=True)[0].decode().rstrip())
 
 

@@ -108,6 +108,9 @@ def convertToBytes(value,varType,encoding='utf-8'):
     if varType == 'int':
         # integer
         byteValue = bytes(chr(value),encoding)
+    if varType == 'b64':
+        # base 64
+        byteValue = base64.b64decode(value)
 
     return byteValue
 
@@ -141,8 +144,9 @@ def xorRepeatingKeyBruteForce(byteCipher):
     # First calculate the most likely key size by comparing sections of the cipher
     # to determine their hamming distance and normalise the result.
     keySizes = {0:1000.0}
-    sectionsToCompare = 2
-    for keySize in range(len(byteCipher)):
+    sectionsToCompare = 2 # increasing this exponentially increases the complexity and time required
+    for keySize in range(1,len(byteCipher)):
+        print(keySize)
         sections = []
         if sectionsToCompare > len(byteCipher)//keySize:
             sectionsToCompare = len(byteCipher)//keySize
@@ -184,8 +188,8 @@ print("S1C2 - Fixed XOR")
 assert(xorHex("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965")=="746865206b696420646f6e277420706c6179")
 # S1C3
 print("S1C3 - Single-byte XOR cipher")
-ciphertextBytes = convertToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",'hex')
-assert(xorSingleChar(ciphertextBytes, xorSingleCharBruteForce(ciphertextBytes)[1]) == b"Cooking MC's like a pound of bacon")
+byteCipher = convertToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",'hex')
+assert(xorSingleChar(byteCipher, xorSingleCharBruteForce(byteCipher)[1]) == b"Cooking MC's like a pound of bacon")
 # S1C4
 '''
 print("S1C4 - Detect single-character XOR")
@@ -211,10 +215,12 @@ assert(xorRepeatingKey(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a2
 
 #S1C6
 print("S1C6 - Break repeating-key XOR")
-file = open("S1C6.txt","r").read()
-bytesText = convertToBytes(file,'str')
+file = open("S1C6.txt","r").readlines()
+
 assert(byteToBits(5) == b"00000101")
 assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
-xorRepeatingKeyBruteForce(bytesText)
+for line in file:
+    line = convertToByte(line,'b64')
+    xorRepeatingKeyBruteForce(byteCipher)
 
 

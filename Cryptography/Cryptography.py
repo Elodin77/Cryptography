@@ -52,7 +52,7 @@ def xorSingleChar(byteText, keyValue):
         output += bytes([char ^ keyValue])
     return output
 
-def singleCharXorBruteForce(cipherBytes):
+def xorSingleCharBruteForce(byteCipher):
     '''
     Tries every possible byte for the single-char key. Decrypts the ciphertext with that
     byte and computes the english score for each plaintext. The plaintext with the highest
@@ -63,7 +63,7 @@ def singleCharXorBruteForce(cipherBytes):
     bestEnglishScore = 0
     bestByteText = b''
     for candidate in range(256):
-        byteText = xorSingleChar(cipherBytes,candidate)
+        byteText = xorSingleChar(byteCipher,candidate)
         englishScores[candidate] = getEnglishScore(byteText)
         if englishScores[candidate] > bestEnglishScore:
             bestKey = int(candidate)
@@ -85,6 +85,32 @@ def xorRepeatingString(byteText,byteKey):
         index += 1
     return encryptedText
 
+def byteToBits(byte):
+    '''
+    This function converts a byte to a list of bits.
+    '''
+    bits = []
+    for i in [1,2,4,8,16,32,64,128]:
+        bits.append(byte&i)
+    bits = bits[::-1]
+    return bits
+
+def calculateHammingDistance(byteText1,byteText2):
+    '''
+    This function calculates the number of differing bits between two strings.
+    '''
+    hammingDistance = 0
+    for i in range(min(len(byteText1),len(byteText2))):
+        bits1 = byteToBits(byteText1[i])
+        bits2 = byteToBits(byteText2[i])
+        for b in range(8):
+            if bits1[b] != bits2[b]:
+                hammingDistance += 1
+    return hammingDistance
+
+def xorRepeatingStringBruteForce(byteCipher):
+
+
 # CRYPTOPALS
 # S1C1
 assert(hexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")=="SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
@@ -92,9 +118,9 @@ assert(hexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120
 assert(xorHex("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965")=="746865206b696420646f6e277420706c6179")
 # S1C3
 ciphertextBytes = bytes.fromhex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
-assert(xorSingleChar(ciphertextBytes, singleCharXorBruteForce(ciphertextBytes)[1]) == b"Cooking MC's like a pound of bacon")
+assert(xorSingleChar(ciphertextBytes, xorSingleCharBruteForce(ciphertextBytes)[1]) == b"Cooking MC's like a pound of bacon")
 # S1C4
-file = open("ciphertextFile.txt","r").readlines()
+file = open("S1C4.txt","r").readlines()
 bestEnglishScore = 0
 bestKey = ''
 bestByteText = b''
@@ -107,5 +133,10 @@ for line in file:
         bestByteText = byteText
 assert(bestByteText == b"Now that the party is jumping\n")
 # S1C5
-encryptedText = xorRepeatingString(b"secretmessage",b"secretkey")
-assert(xorRepeatingString(encryptedText,b"secretkey") == b"secretmessage")
+file = open("S1C5.txt","r").read()
+bytesText = bytes(file,'utf-8')
+assert(xorRepeatingString(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
+#S1C6
+file = open("S1C6.txt","r").read()
+print(byteToBits(100))
+

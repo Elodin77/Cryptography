@@ -72,7 +72,7 @@ def xorSingleCharBruteForce(byteCipher):
     # returns the english score, best key, and the plain text
     return bestEnglishScore,bestKey,bestByteText
 
-def xorRepeatingString(byteText,byteKey):
+def xorRepeatingKey(byteText,byteKey):
     '''
     This encrypts a message using a repeating key XOR encryption.
     The plaintext and key are both strings.
@@ -121,7 +121,7 @@ def byteToBits(byte):
     bits = bits[::-1]
     return bits
 
-def calculateHammingDistance(byteText1,byteText2):
+def hammingDistance(byteText1,byteText2):
     '''
     This function calculates the number of differing bits between two strings.
     '''
@@ -134,7 +134,45 @@ def calculateHammingDistance(byteText1,byteText2):
                 hammingDistance += 1
     return hammingDistance
 
-def xorRepeatingStringBruteForce(byteCipher):
+def xorRepeatingKeyBruteForce(byteCipher):
+    '''
+    This function brute forces a repeating-key XOR encryption
+    '''
+    # First calculate the most likely key size by comparing sections of the cipher
+    # to determine their hamming distance and normalise the result.
+    keySizes = {0:1000.0}
+    sectionsToCompare = 2
+    for keySize in range(len(byteCipher)):
+        sections = []
+        if sectionsToCompare > len(byteCipher)//keySize:
+            sectionsToCompare = len(byteCipher)//keySize
+        # Record sections of the cipher
+        for s in range(sectionsToCompare):
+            sections.append(byteCipher[s:keySize+s])
+        # Average the hamming distance between each of these sections and every other one
+        totalHammingDistance = 0
+        for section1 in sections:
+            for section2 in sections:
+                if section1 != section2:
+                    totalHammingDistance += hammingDistance(section1,section2)
+        normalisedAverageHammingDistance = float(totalHammingDistance)/(keySize**2) # get average and normalise it
+        # Add this value to the dictionary
+        keySizes[keySize] =  float(normalisedAverageHammingDistance)
+    # Get the top 'x' key sizes
+    numOfKeySizesToTry = 3 # The top 'numOfKeySizesToTry' key sizes will be stored and tried next
+    bestNormalisedAverageHammingDistances = sorted(keySizes.values())[:numOfKeySizesToTry]
+    bestKeySizes = []
+    for keySize in keySizes.keys():
+        if keySizes[keySize] in bestNormalisedAverageHammingDistances:
+            bestKeySizes.append(keySize)
+    # Go through each key size
+    for keySize in bestKeySizes:
+        for startIndex in range(keySize-1): # Go through each possible start position for the key
+            # Calculate the ending index (cut of the end of the cipher because of characters that don't make a full keySize-sized block
+            endIndex = (len(byteCipher)-startIndex)//keySize*keySize
+            print(startIndex,endIndex)
+            
+
     return ''
 
 # CRYPTOPALS
@@ -149,6 +187,7 @@ print("S1C3 - Single-byte XOR cipher")
 ciphertextBytes = convertToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",'hex')
 assert(xorSingleChar(ciphertextBytes, xorSingleCharBruteForce(ciphertextBytes)[1]) == b"Cooking MC's like a pound of bacon")
 # S1C4
+'''
 print("S1C4 - Detect single-character XOR")
 file = open("S1C4.txt","r").readlines()
 bestEnglishScore = 0
@@ -161,16 +200,21 @@ for line in file:
         bestEnglishScore = int(score)
         bestKey = int(key)
         bestByteText = byteText
-print(bestByteText)
-input()
 assert(bestByteText == b"Now that the party is jumping\n")
+'''
 # S1C5
+
 print("S1C5 - Implement repeating-key XOR")
 file = open("S1C5.txt","r").read()
 bytesText = convertToBytes(file,'str')
-assert(xorRepeatingString(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
+assert(xorRepeatingKey(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
+
 #S1C6
 print("S1C6 - Break repeating-key XOR")
 file = open("S1C6.txt","r").read()
+bytesText = convertToBytes(file,'str')
 assert(byteToBits(5) == b"00000101")
+assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
+xorRepeatingKeyBruteForce(bytesText)
+
 

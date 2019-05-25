@@ -4,7 +4,7 @@ This file contains lots of functions which are related to cryptography.
 Not all of these I created myself, and I do not take credit for any of them.
 Most of these are functions created to go through the Cryptopals course.
 '''
-import base64,sys,hashlib
+import base64,sys
 from Crypto.Cipher import AES
 
 englishCharacterFrequencies = {
@@ -192,6 +192,27 @@ def aesEcbDecrypt(byteCipher,byteKey):
     cipherAlgorithm = AES.new(byteKey, AES.MODE_ECB)
     return cipherAlgorithm.decrypt(byteCipher)
 
+def countAesEcbRepetitions(ciphertext):
+    '''
+    Counts the number of repeated chunks of the ciphertext and returns it.
+    '''
+    chunks = [ciphertext[i:i + AES.block_size] for i in range(0, len(ciphertext), AES.block_size)]
+    numDuplicates = len(chunks) - len(set(chunks))
+    return numDuplicates
+
+def detectEcbEncryptedCiphertext(ciphertexts):
+    '''
+    Detects which ciphertext among the given one is the one most likely encrypted with AES in ECB mode.
+    '''
+    best = (-1, 0)     # index of best candidate, repetitions of best candidate
+    # For each ciphertext
+    for i in range(len(ciphertexts)):
+        # Count the block repetitions
+        repetitions = countAesEcbRepetitions(ciphertexts[i])
+        # Keep the ciphertext with most repetitions
+        best = max(best, (i, repetitions), key=lambda t: t[1])
+    # Return the ciphertext with most repetitions
+    return best
 
 # CRYPTOPALS
 '''
@@ -238,11 +259,17 @@ assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
 byteCipher = convertToBytes(file,'b64')
 key, byteText = xorRepeatingKeyBruteForce(byteCipher,showProgress=True)
 assert(key == b"Terminator X: Bring the noise")
-'''
+
 
 # S1C7
 print("S1C7 - AES in ECB mode")
 file = open("S1C7.txt","r").read()
 byteCipher = convertToBytes(file,'b64')
 byteText = aesEcbDecrypt(byteCipher,b"YELLOW SUBMARINE")
-print(byteText.decode().rstrip())
+assert(byteText[:8] == b"I'm back")
+'''
+
+# S1C8
+print("S1C8 - Detect AES in ECB mode")
+result = detectEcbEncryptedCiphertext([convertToBytes(line.strip(),'hex') for line in open("S1C8.txt")])
+print("The ciphertext encrypted in ECB mode is the one at position",result[0],"which contains", result[1], "repetitions")

@@ -231,7 +231,7 @@ def sha1BruteForce(byteHash,possibleByteChars = list(range(256)),size=1):
         tried = 0.0
         for bytePwd in possibleBytePwds:
             tried += 1
-            sys.stdout.write("SIZE: %d\t%d/%d\t%d%%  \r" % (size,tried,total,int(tried/total*100)))
+            sys.stdout.write("CRACKING: %d\t%d/%d\t%d%%  \r" % (size,tried,total,int(tried/total*100)))
             sys.stdout.flush()
             pwd = ''.join([byte.decode() for byte in bytePwd])
             byteHashOfPwd = hashlib.sha1(pwd.encode()).digest()
@@ -240,75 +240,87 @@ def sha1BruteForce(byteHash,possibleByteChars = list(range(256)),size=1):
         size += 1
     return pwd
 
+def clearLine():
+    print("                                                                                    ")
+
 # CRYPTOPALS #
 # S1C1
-print("\nS1C1 - Convert hex to base64")
+print("S1C1 - Convert hex to base64")
 assert(hexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")=="SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
-
+clearLine()
 # S1C2
-print("\nS1C2 - Fixed XOR")
+print("S1C2 - Fixed XOR")
 assert(xorHex("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965")=="746865206b696420646f6e277420706c6179")
-
+clearLine()
 # S1C3
-print("\nS1C3 - Single-byte XOR cipher")
+print("S1C3 - Single-byte XOR cipher")
 byteCipher = convertToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",'hex')
 assert(xorSingleChar(byteCipher, xorSingleCharBruteForce(byteCipher)[1]) == b"Cooking MC's like a pound of bacon")
-
+clearLine()
 # S1C4
-print("\nS1C4 - Detect single-character XOR")
-file = open("S1C4.txt","r").readlines()
-bestEnglishScore = 0
-bestKey = ''
-bestByteText = b''
-lineNum = 0
-for line in file:
-    lineNum += 1
-    sys.stdout.write("CRACKING: %d/%d\t%d%%   \r" % (lineNum,len(file),int(lineNum/len(file)*100)))
-    sys.stdout.flush()
-    bytesLine = convertToBytes(line.strip(),'hex')
-    score,key,byteText = xorSingleCharBruteForce(bytesLine)
-    if score > bestEnglishScore:
-        bestEnglishScore = int(score)
-        bestKey = int(key)
-        bestByteText = byteText
-assert(bestByteText == b"Now that the party is jumping\n")
-
+print("S1C4 - Detect single-character XOR")
+try:
+    file = open("S1C4.txt","r").readlines()
+    bestEnglishScore = 0
+    bestKey = ''
+    bestByteText = b''
+    lineNum = 0
+    for line in file:
+        lineNum += 1
+        sys.stdout.write("CRACKING: %d/%d\t%d%%   \r" % (lineNum,len(file),int(lineNum/len(file)*100)))
+        sys.stdout.flush()
+        bytesLine = convertToBytes(line.strip(),'hex')
+        score,key,byteText = xorSingleCharBruteForce(bytesLine)
+        if score > bestEnglishScore:
+            bestEnglishScore = int(score)
+            bestKey = int(key)
+            bestByteText = byteText
+    assert(bestByteText == b"Now that the party is jumping\n")
+except:
+    print("CANCELLED")
+clearLine()
 # S1C5
-print("\nS1C5 - Implement repeating-key XOR")
+print("S1C5 - Implement repeating-key XOR")
 file = open("S1C5.txt","r").read()
 bytesText = convertToBytes(file,'str')
 assert(xorRepeatingKey(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
+clearLine()
 
 # S1C6
-print("\nS1C6 - Break repeating-key XOR")
-file = open("S1C6.txt","r").read()
-assert(byteToBits(5) == b"00000101")
-assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
-byteCipher = convertToBytes(file,'b64')
-key, byteText = xorRepeatingKeyBruteForce(byteCipher,showProgress=True)
-assert(key == b"Terminator X: Bring the noise")
+print("S1C6 - Break repeating-key XOR")
+try:
+    file = open("S1C6.txt","r").read()
+    assert(byteToBits(5) == b"00000101")
+    assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
+    byteCipher = convertToBytes(file,'b64')
+    key, byteText = xorRepeatingKeyBruteForce(byteCipher,showProgress=True)
+    assert(key == b"Terminator X: Bring the noise")
+except:
+    print("CANCELLED")
 
-
+clearLine()
 # S1C7
-print("S1C7 - AES in ECB mode\n")
+print("S1C7 - AES in ECB mode")
 file = open("S1C7.txt","r").read()
 byteCipher = convertToBytes(file,'b64')
 byteText = aesEcbDecrypt(byteCipher,b"YELLOW SUBMARINE")
 assert(byteText[:8] == b"I'm back")
-
-
+clearLine()
 # S1C8
-print("S1C8 - Detect AES in ECB mode\n")
-result = detectEcbEncryptedCiphertext([convertToBytes(line.strip(),'hex') for line in open("S1C8.txt")])
-print("The ciphertext encrypted in ECB mode is the one at position",result[0],"which contains", result[1], "repetitions\n")
-
+print("S1C8 - Detect AES in ECB mode")
+try:
+    result = detectEcbEncryptedCiphertext([convertToBytes(line.strip(),'hex') for line in open("S1C8.txt")])
+    print("The ciphertext encrypted in ECB mode is the one at position",result[0],"which contains", result[1], "repetitions\n")
+except:
+    print("CANCELLED")
+clearLine()
 # OTHER STUFF #
 # Cracking SHA-1 Code
-print("Cracking SHA-1\n")
+print("Cracking SHA-1")
 try:
     possibleByteChars = [convertToBytes(char,'str') for char in ['(','Q','=','w','i','n','*','5']]
     print(sha1BruteForce(convertToBytes('67ae1a64661ac8b4494666f58c4822408dd0a3e4','hex'),possibleByteChars,8))
 except:
-    pass
-
+    print("CANCELLED")
+clearLine()
 

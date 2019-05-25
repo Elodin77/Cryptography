@@ -4,7 +4,8 @@ This file contains lots of functions which are related to cryptography.
 Not all of these I created myself, and I do not take credit for any of them.
 Most of these are functions created to go through the Cryptopals course.
 '''
-import base64
+import base64,sys,hashlib
+from Crypto.Cipher import AES
 
 englishCharacterFrequencies = {
     'a': 0.0651738, 'b': 0.0124248, 'c': 0.0217339, 'd': 0.0349835, 'e': 0.1041442, 'f': 0.0197881, 'g': 0.0158610,
@@ -13,11 +14,6 @@ englishCharacterFrequencies = {
     'v': 0.0082903, 'w': 0.0171272, 'x': 0.0013692, 'y': 0.0145984, 'z': 0.0007836, ' ': 0.1918182
 }
 
-def bytesToString(inputBytes):
-    string = ''
-    for byte in inputBytes:
-        string += chr(byte)
-    return string
 
 def getEnglishScore(inputBytes):
     '''
@@ -179,7 +175,8 @@ def xorRepeatingKeyBruteForce(byteCipher,showProgress=False):
         # Break the ciphertext into blocks that are 'keySize' in length
         for i in range(keySize):
             if showProgress:
-                print(str(round(i*100/keySize/numOfKeySizesToTry+keysDone*100/numOfKeySizesToTry,2))+"% CRACKED")
+                sys.stdout.write("CRACKING: %d%%   \r" % int(i*100/keySize/numOfKeySizesToTry+keysDone*100/numOfKeySizesToTry))
+                sys.stdout.flush()
             block = b''
             # Transpose the blocks - make a block that is the ith byte of every block
             for j in range(i,len(byteCipher),keySize):
@@ -191,19 +188,27 @@ def xorRepeatingKeyBruteForce(byteCipher,showProgress=False):
     # Get the decryption with the highest english score
     return max(bestDecryptions, key=lambda k: getEnglishScore(k[1])) # <-- Pretty cool syntax, I want to learn how to do it.
 
+def aesEcbDecrypt(byteCipher,byteKey):
+    cipherAlgorithm = AES.new(byteKey, AES.MODE_ECB)
+    return cipherAlgorithm.decrypt(byteCipher)
+
+
 # CRYPTOPALS
+'''
 # S1C1
 print("S1C1 - Convert hex to base64")
 assert(hexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")=="SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
+
 # S1C2
 print("S1C2 - Fixed XOR")
 assert(xorHex("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965")=="746865206b696420646f6e277420706c6179")
+
 # S1C3
 print("S1C3 - Single-byte XOR cipher")
 byteCipher = convertToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",'hex')
 assert(xorSingleChar(byteCipher, xorSingleCharBruteForce(byteCipher)[1]) == b"Cooking MC's like a pound of bacon")
+
 # S1C4
-'''
 print("S1C4 - Detect single-character XOR")
 file = open("S1C4.txt","r").readlines()
 bestEnglishScore = 0
@@ -218,23 +223,26 @@ for line in file:
         bestKey = int(key)
         bestByteText = byteText
 assert(bestByteText == b"Now that the party is jumping\n")
-'''
-# S1C5
 
+# S1C5
 print("S1C5 - Implement repeating-key XOR")
 file = open("S1C5.txt","r").read()
 bytesText = convertToBytes(file,'str')
 assert(xorRepeatingKey(bytesText,b"ICE").hex() == "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
 
-#S1C6
-'''
+# S1C6
 print("S1C6 - Break repeating-key XOR")
 file = open("S1C6.txt","r").read()
-
 assert(byteToBits(5) == b"00000101")
 assert(hammingDistance(b"this is a test",b"wokka wokka!!!") == 37)
 byteCipher = convertToBytes(file,'b64')
-print(xorRepeatingKeyBruteForce(byteCipher,showProgress=True)[0].decode().rstrip())
+key, byteText = xorRepeatingKeyBruteForce(byteCipher,showProgress=True)
+assert(key == b"Terminator X: Bring the noise")
 '''
 
-
+# S1C7
+print("S1C7 - AES in ECB mode")
+file = open("S1C7.txt","r").read()
+byteCipher = convertToBytes(file,'b64')
+byteText = aesEcbDecrypt(byteCipher,b"YELLOW SUBMARINE")
+print(byteText.decode().rstrip())
